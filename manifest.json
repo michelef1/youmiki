@@ -1,0 +1,17 @@
+{
+  "name": "YouMiki Playlist Manager",
+  "short_name": "YouMiki",
+  "description": "Gestore di playlist personalizzato con streaming organizzato.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0f0f0f",
+  "theme_color": "#1f1f1f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/fluent/512/playlist.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
