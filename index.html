@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouMiki - Playlist Manager Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1f1f1f">
+    
+    <style>
+        /* --- DESIGN SYSTEM & VARIABILI --- */
+        :root {
+            --bg-main: #0f0f0f;
+            --bg-surface: #1f1f1f;
+            --accent: #ff0055;
+            --text-main: #f1f1f1;
+            --text-secondary: #aaa0aa;
+            --font-stack: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: var(--font-stack);
+            padding-bottom: 2rem;
+            overflow-x: hidden;
+        }
+
+        /* --- HEADER --- */
+        header {
+            position: sticky;
+            top: 0;
+            background-color: rgba(15, 15, 15, 0.95);
+            backdrop-filter: blur(8px);
+            padding: 1rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid #2d2d2d;
+            z-index: 10;
+        }
+
+        .header-top {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            user-select: none;
+            cursor: pointer;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        /* --- PLAYLIST MANAGEMENT AREA --- */
+        .playlist-manager {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+        }
+
+        .playlist-select {
+            background-color: #2d2d2d;
+            color: var(--text-main);
+            border: 1px solid #3d3d3d;
+            padding: 0.6rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .btn {
+            background-color: #2d2d2d;
+            color: var(--text-main);
+            border: 1px solid #3d3d3d;
+            padding: 0.6rem 1.2rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #3d3d3d;
+        }
+
+        .btn-accent {
+            background-color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .btn-accent:hover {
+            opacity: 0.9;
+            background-color: var(--accent);
+        }
+
+        /* Menu tre puntini */
+        .dots-menu-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dots-btn {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.6rem;
+            cursor: pointer;
+            padding: 0 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            transition: background-color 0.2s;
+        }
+
+        .dots-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 110%;
+            right: 0;
+            background-color: var(--bg-surface);
+            border: 1px solid #3d3d3d;
+            border-radius: 8px;
+            min-width: 200px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 0.8rem 1rem;
+            color: var(--text-main);
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-align: left;
+            background: none;
+            border: none;
+            width: 100%;
+            font-family: inherit;
+            transition: background-color 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background-color: #2d2d2d;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: #3d3d3d;
+        }
+
+        /* --- MODALI --- */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.open {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--bg-surface);
+            border: 1px solid #3d3d3d;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+
+        .modal-body {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-main);
+        }
+
+        .modal-body ul {
+            margin-left: 1.2rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-close-btn {
+            background-color: #2d2d2d;
+            color: var(--text-main);
+            border: 1px solid #444;
+            padding: 0.5rem 1.2rem;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 1.5rem;
+            float: right;
+            font-weight: 600;
+        }
+
+        .modal-close-btn:hover {
+            background-color: #3d3d3d;
+        }
+
+        /* Bottone Annulla specifico per modale conferma */
+        .btn-modal-cancel {
+            background-color: transparent;
+            border: 1px solid #555;
+            color: #ccc;
+            margin-right: 0.5rem;
+        }
+        .btn-modal-cancel:hover {
+            background-color: #333;
+        }
+
+        /* --- SEARCH FORM --- */
+        .search-form {
+            display: flex;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .search-input {
+            flex: 1;
+            background-color: var(--bg-surface);
+            border: 1px solid #3d3d3d;
+            border-right: none;
+            padding: 0.8rem 1rem;
+            color: var(--text-main);
+            font-size: 1rem;
+            border-radius: 40px 0 0 40px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+        }
+
+        .search-button {
+            background-color: #2d2d2d;
+            border: 1px solid #3d3d3d;
+            color: var(--text-main);
+            padding: 0 1.5rem;
+            border-radius: 0 40px 40px 0;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        /* --- TITOLO SEZIONE --- */
+        .section-header {
+            max-width: 1400px;
+            margin: 2rem auto 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            border-radius: 12px;
+        }
+
+        /* --- GRIGLIA --- */
+        main {
+            padding: 1rem 2rem 2rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem 1.5rem;
+        }
+
+        /* --- CARD VIDEO --- */
+        .video-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            background-color: transparent;
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .video-card {
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .video-wrapper:hover .thumbnail-container {
+            transform: translateY(-4px);
+        }
+
+        .thumbnail-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: #2d2d2d;
+            transition: transform 0.2s;
+        }
+
+        .thumbnail-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .duration-badge {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .video-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            padding: 0 0.2rem;
+        }
+
+        .video-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            color: var(--text-main);
+        }
+
+        .video-channel {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        /* --- CONTROLLI PLAYLIST --- */
+        .card-actions {
+            display: flex;
+            gap: 0.3rem;
+            margin-top: 2px;
+            padding: 0 0.2rem;
+        }
+
+        .playlist-action-btn {
+            background-color: #222;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+            flex: 1;
+            text-align: center;
+        }
+
+        .playlist-action-btn:hover {
+            background-color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .playlist-inline-select {
+            background-color: #222;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 5px;
+            font-size: 0.8rem;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            outline: none;
+            max-width: 130px;
+        }
+
+        .playlist-action-btn.remove-btn {
+            background-color: #222;
+            border-color: #444;
+        }
+        .playlist-action-btn.remove-btn:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+        }
+
+        .status-message {
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 3rem;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* --- BARRA DI PAGINAZIONE --- */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            margin: 2.5rem 0 1rem 0;
+            width: 100%;
+        }
+
+        .pagination-btn {
+            padding: 0.6rem 1.5rem;
+            border-radius: 20px;
+            background-color: var(--bg-surface);
+            border: 1px solid #3d3d3d;
+            color: var(--text-main);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background-color: #2d2d2d;
+            border-color: var(--accent);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        @media (min-width: 768px) {
+            header {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-top">
+            <div class="logo" id="logoHome">You<span>Miki</span></div>
+            <div class="playlist-manager">
+                <select class="playlist-select" id="playlistSelect">
+                    </select>
+                <button class="btn btn-accent" id="newPlaylistBtn">+ Nuova</button>
+                
+                <div class="dots-menu-container">
+                    <button class="dots-btn" id="dotsBtn">⋮</button>
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <button class="dropdown-item" id="openGuideBtn">📖 Guida Applicazione</button>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item" id="openInfoBtn">ℹ️ Info App</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <form class="search-form" id="searchForm">
+            <input type="text" class="search-input" id="searchInput" placeholder="Cerca video o musica su YouMiki..." required>
+            <button type="submit" class="search-button btn">Cerca</button>
+        </form>
+    </header>
+
+    <div class="section-header">
+        <h2 class="section-title" id="pageTitle">Musica di Tendenza</h2>
+        <div id="playlistManagementControls" style="display: none; gap: 0.5rem;">
+            <button class="btn btn-sm" id="renamePlaylistBtn">✏️ Rinomina</button>
+            <button class="btn btn-sm" id="deletePlaylistBtn" style="color: #ff4444; border-color: #552222;">🗑️ Elimina</button>
+        </div>
+    </div>
+
+    <main>
+        <div class="video-grid" id="videoGrid">
+            <div class="status-message">Caricamento in corso...</div>
+        </div>
+
+        <div class="pagination-container" id="paginationContainer" style="display: none;">
+            <button class="pagination-btn" id="prevPageBtn" disabled>◀ Precedente</button>
+            <button class="pagination-btn" id="nextPageBtn" disabled>Successivo ▶</button>
+        </div>
+    </main>
+
+    <div class="modal" id="guideModal">
+        <div class="modal-content">
+            <h3 class="modal-title">Guida all'Uso</h3>
+            <div class="modal-body">
+                <p>Benvenuto in <strong>YouMiki</strong>! Ecco come sfruttare al meglio l'app:</p>
+                <ul>
+                    <li><strong>Home & Tendenze:</strong> All'avvio vedi i brani musicali più popolari del momento in Italia. Puoi tornarci cliccando sul logo in alto.</li>
+                    <li><strong>Cerca:</strong> Usa la barra di ricerca per trovare qualsiasi traccia o video musicale.</li>
+                    <li><strong>Più Pagine di risultati:</strong> In fondo alla lista, usa i tasti "Precedente" e "Successivo" per sfogliare infinite pagine di risultati YouTube.</li>
+                    <li><strong>Apri Video:</strong> Clicca sulla card o sulla foto di un video per aprirlo istantaneamente in una nuova scheda su YouTube.</li>
+                    <li><strong>Crea Playlist:</strong> Clicca sul tasto <em>"+ Nuova"</em> in alto per generare una nuova lista personalizzata.</li>
+                </ul>
+            </div>
+            <button class="modal-close-btn" id="closeGuideBtn">Chiudi</button>
+        </div>
+    </div>
+
+    <div class="modal" id="infoModal">
+        <div class="modal-content">
+            <h3 class="modal-title">Informazioni Applicazione</h3>
+            <div class="modal-body" style="text-align: center; padding: 1rem 0;">
+                <p style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">YouMiki v2.5</p>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Interfaccia leggera e personalizzata per lo streaming organizzato.</p>
+                <div style="border-top: 1px solid #3d3d3d; padding-top: 1rem; font-style: italic;">
+                    Creata da Miki By Gemini
+                </div>
+            </div>
+            <button class="modal-close-btn" id="closeInfoBtn">Chiudi</button>
+        </div>
+    </div>
+
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <h3 class="modal-title">YouMiki</h3>
+            <div class="modal-body">
+                <p id="confirmModalMessage">Sei sicuro di voler procedere con l'eliminazione?</p>
+            </div>
+            <div style="margin-top: 1.5rem; text-align: right;">
+                <button class="btn btn-modal-cancel" id="confirmCancelBtn">Annulla</button>
+                <button class="btn btn-accent" id="confirmExecuteBtn" style="padding: 0.5rem 1.2rem; border-radius: 20px;">Elimina</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // LA TUA NUOVA CHIAVE API AGGIORNATA E PROTETTA
+        const API_KEY = 'AIzaSyBWjTMvmb6m9EMhjbqAnYrx4zJPLftK4mU';
+        
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.getElementById('searchInput');
+        const videoGrid = document.getElementById('videoGrid');
+        const logoHome = document.getElementById('logoHome');
+        const pageTitle = document.getElementById('pageTitle');
+        const playlistSelect = document.getElementById('playlistSelect');
+        const newPlaylistBtn = document.getElementById('newPlaylistBtn');
+        const renamePlaylistBtn = document.getElementById('renamePlaylistBtn');
+        const deletePlaylistBtn = document.getElementById('deletePlaylistBtn');
+        const playlistManagementControls = document.getElementById('playlistManagementControls');
+
+        // Controlli Paginazione
+        const paginationContainer = document.getElementById('paginationContainer');
+        const prevPageBtn = document.getElementById('prevPageBtn');
+        const nextPageBtn = document.getElementById('nextPageBtn');
+
+        // Menu e Modali
+        const dotsBtn = document.getElementById('dotsBtn');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+        const guideModal = document.getElementById('guideModal');
+        const infoModal = document.getElementById('infoModal');
+        const openGuideBtn = document.getElementById('openGuideBtn');
+        const openInfoBtn = document.getElementById('openInfoBtn');
+        const closeGuideBtn = document.getElementById('closeGuideBtn');
+        const closeInfoBtn = document.getElementById('closeInfoBtn');
+
+        // Modale di conferma personalizzata
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmModalMessage = document.getElementById('confirmModalMessage');
+        const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+        const confirmExecuteBtn = document.getElementById('confirmExecuteBtn');
+
+        // Variabili di stato globale
+        let currentView = "trends"; 
+        let currentQuery = "";
+        let nextToken = "";
+        let prevToken = "";
+        let onConfirmAction = null; // Memorizza temporaneamente l'azione da eseguire alla conferma
+        
+        let playlistsStore = JSON.parse(localStorage.getItem('youmiki_playlists_store')) || {
+            "playlist_default": {
+                name: "Preferiti ❤️",
+                videos: []
+            }
+        };
+
+        // Funzione helper per aprire la finestra di dialogo YouMiki al posto del confirm del browser
+        function showYouMikiConfirm(message, callbackAction) {
+            confirmModalMessage.textContent = message;
+            onConfirmAction = callbackAction;
+            confirmModal.classList.add('open');
+        }
+
+        confirmCancelBtn.addEventListener('click', () => {
+            confirmModal.classList.remove('open');
+            onConfirmAction = null;
+        });
+
+        confirmExecuteBtn.addEventListener('click', () => {
+            if (onConfirmAction) onConfirmAction();
+            confirmModal.classList.remove('open');
+            onConfirmAction = null;
+        });
+
+        // Gestione Menu Tre Puntini
+        dotsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('show');
+        });
+
+        document.addEventListener('click', () => {
+            dropdownMenu.classList.remove('show');
+        });
+
+        // Modali Guida e Info
+        openGuideBtn.addEventListener('click', () => guideModal.classList.add('open'));
+        openInfoBtn.addEventListener('click', () => infoModal.classList.add('open'));
+        closeGuideBtn.addEventListener('click', () => guideModal.classList.remove('open'));
+        closeInfoBtn.addEventListener('click', () => infoModal.classList.remove('open'));
+
+        function populatePlaylistDropdown() {
+            playlistSelect.innerHTML = `
+                <option value="trends">📁 Esplora Playlist</option>
+                <optgroup label="Le mie Playlist" id="dropdownPlaylistsGroup"></optgroup>
+            `;
+            
+            const group = playlistSelect.querySelector('#dropdownPlaylistsGroup');
+            for (const id in playlistsStore) {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = `${playlistsStore[id].name} (${playlistsStore[id].videos.length})`;
+                if (currentView === id) {
+                    option.selected = true;
+                }
+                group.appendChild(option);
+            }
+        }
+
+        function saveStore() {
+            localStorage.setItem('youmiki_playlists_store', JSON.stringify(playlistsStore));
+            populatePlaylistDropdown();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            populatePlaylistDropdown();
+            loadTrendingMusic();
+        });
+
+        logoHome.addEventListener('click', () => {
+            searchInput.value = '';
+            playlistSelect.value = "trends";
+            loadTrendingMusic();
+        });
+
+        playlistSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            searchInput.value = '';
+            if (val === "trends") {
+                loadTrendingMusic();
+            } else {
+                openPlaylist(val);
+            }
+        });
+
+        newPlaylistBtn.addEventListener('click', () => {
+            const name = prompt("Inserisci il nome della nuova playlist:");
+            if (!name || name.trim() === "") return;
+            
+            const newId = "playlist_" + Date.now();
+            playlistsStore[newId] = {
+                name: name.trim(),
+                videos: []
+            };
+            
+            saveStore();
+            openPlaylist(newId);
+        });
+
+        renamePlaylistBtn.addEventListener('click', () => {
+            if (!playlistsStore[currentView]) return;
+            
+            const currentName = playlistsStore[currentView].name;
+            const newName = prompt(`Modifica il nome per questa playlist:`, currentName);
+            if (!newName || newName.trim() === "" || newName === currentName) return;
+            
+            playlistsStore[currentView].name = newName.trim();
+            saveStore();
+            pageTitle.textContent = newName.trim();
+        });
+
+        // Modificato con la nuova finestra personalizzata YouMiki
+        deletePlaylistBtn.addEventListener('click', () => {
+            if (!playlistsStore[currentView]) return;
+            
+            showYouMikiConfirm(`Sei sicuro di voler eliminare definitivamente la playlist "${playlistsStore[currentView].name}"?`, () => {
+                delete playlistsStore[currentView];
+                saveStore();
+                playlistSelect.value = "trends";
+                loadTrendingMusic();
+            });
+        });
+
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            if (!query) return;
+
+            currentView = "search";
+            currentQuery = query;
+            playlistSelect.value = "trends";
+            playlistManagementControls.style.display = "none";
+            pageTitle.textContent = `Risultati per: "${query}"`;
+            
+            loadSearchResults(""); 
+        });
+
+        nextPageBtn.addEventListener('click', () => {
+            if (!nextToken) return;
+            window.scrollTo({top: 0, behavior: 'smooth'});
+            if (currentView === "trends") {
+                loadTrendingMusic(nextToken);
+            } else if (currentView === "search") {
+                loadSearchResults(nextToken);
+            }
+        });
+
+        prevPageBtn.addEventListener('click', () => {
+            if (!prevToken) return;
+            window.scrollTo({top: 0, behavior: 'smooth'});
+            if (currentView === "trends") {
+                loadTrendingMusic(prevToken);
+            } else if (currentView === "search") {
+                loadSearchResults(prevToken);
+            }
+        });
+
+        async function loadTrendingMusic(pageToken = "") {
+            currentView = "trends";
+            playlistManagementControls.style.display = "none";
+            pageTitle.textContent = "Musica di Tendenza in Italia";
+            showStatus("Caricamento dei brani più caldi del momento...");
+
+            try {
+                let trendsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&chart=mostPopular&regionCode=IT&videoCategoryId=10&maxResults=16&key=${API_KEY}`;
+                if (pageToken) {
+                    trendsUrl += `&pageToken=${pageToken}`;
+                }
+
+                const res = await fetch(trendsUrl);
+                const data = await res.json();
+
+                if (data.error) throw new Error(data.error.message);
+                
+                nextToken = data.nextPageToken || "";
+                prevToken = data.prevPageToken || "";
+
+                renderGrid(data.items || []);
+                setupPaginationControls();
+            } catch (error) {
+                console.error(error);
+                showStatus("Errore nel caricamento delle tendenze musicali.");
+                paginationContainer.style.display = "none";
+            }
+        }
+
+        async function loadSearchResults(pageToken = "") {
+            showStatus("Caricamento dei video in corso...");
+            try {
+                let searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=16&q=${encodeURIComponent(currentQuery)}&type=video&relevanceLanguage=it&key=${API_KEY}`;
+                if (pageToken) {
+                    searchUrl += `&pageToken=${pageToken}`;
+                }
+
+                const res = await fetch(searchUrl);
+                const searchData = await res.json();
+
+                if (searchData.error) throw new Error(searchData.error.message);
+                if (!searchData.items || searchData.items.length === 0) {
+                    showStatus("Nessun video trovato. Riprova con altre parole chiave.");
+                    paginationContainer.style.display = "none";
+                    return;
+                }
+
+                nextToken = searchData.nextPageToken || "";
+                prevToken = searchData.prevPageToken || "";
+
+                const videoIds = searchData.items.map(item => item.id.videoId).join(',');
+                const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${videoIds}&key=${API_KEY}`;
+                const detailsRes = await fetch(detailsUrl);
+                const detailsData = await detailsRes.json();
+
+                renderGrid(detailsData.items || []);
+                setupPaginationControls();
+            } catch (error) {
+                console.error(error);
+                showStatus("Errore nel collegamento con YouTube.");
+                paginationContainer.style.display = "none";
+            }
+        }
+
+        function setupPaginationControls() {
+            if (currentView === "trends" || currentView === "search") {
+                paginationContainer.style.display = "flex";
+                prevPageBtn.disabled = !prevToken;
+                nextPageBtn.disabled = !nextToken;
+            } else {
+                paginationContainer.style.display = "none";
+            }
+        }
+
+        function openPlaylist(id) {
+            currentView = id;
+            playlistSelect.value = id;
+            playlistManagementControls.style.display = "flex";
+            pageTitle.textContent = playlistsStore[id].name;
+            paginationContainer.style.display = "none";
+            renderGrid(playlistsStore[id].videos);
+        }
+
+        function formatDuration(isoDuration) {
+            if (!isoDuration) return "0:00";
+            const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+            if (!match) return "0:00";
+            const hours = parseInt(match[1]) || 0;
+            const minutes = parseInt(match[2]) || 0;
+            const seconds = parseInt(match[3]) || 0;
+
+            if (hours > 0) {
+                return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function showStatus(message) {
+            videoGrid.innerHTML = `<div class="status-message">${message}</div>`;
+        }
+
+        function renderGrid(videos) {
+            videoGrid.innerHTML = '';
+            
+            if (videos.length === 0) {
+                if (currentView !== "trends" && currentView !== "search") {
+                    showStatus("Questa playlist è vuota. Cerca un video e inseriscilo usando il selettore sotto la card!");
+                }
+                return;
+            }
+
+            videos.forEach(video => {
+                const idVideo = video.id.videoId || video.id; 
+                
+                const wrapper = document.createElement('div');
+                wrapper.classList.add('video-wrapper');
+
+                const duration = formatDuration(video.contentDetails?.duration);
+                const thumbnail = video.snippet.thumbnails.medium?.url || video.snippet.thumbnails.default?.url;
+                const safeTitle = video.snippet.title.replace(/"/g, '&quot;');
+
+                const card = document.createElement('a');
+                card.classList.add('video-card');
+                card.href = `https://www.youtube.com/watch?v=${idVideo}`;
+                card.target = '_blank';
+                
+                card.innerHTML = `
+                    <div class="thumbnail-container">
+                        <img src="${thumbnail}" alt="${safeTitle}" loading="lazy">
+                        <div class="duration-badge">${duration}</div>
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">${video.snippet.title}</div>
+                        <div class="video-channel">${video.snippet.channelTitle}</div>
+                    </div>
+                `;
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.classList.add('card-actions');
+
+                // Rimozione video modificata con la nuova modale YouMiki
+                if (currentView !== "trends" && currentView !== "search") {
+                    const removeBtn = document.createElement('button');
+                    removeBtn.classList.add('playlist-action-btn', 'remove-btn');
+                    removeBtn.textContent = "✕ Rimuovi";
+                    removeBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        
+                        showYouMikiConfirm(`Sei sicuro di voler eliminare questo video dalla playlist?`, () => {
+                            playlistsStore[currentView].videos = playlistsStore[currentView].videos.filter(item => (item.id.videoId || item.id) !== idVideo);
+                            saveStore();
+                            renderGrid(playlistsStore[currentView].videos);
+                        });
+                    });
+                    actionsDiv.appendChild(removeBtn);
+                } else {
+                    const addBtn = document.createElement('button');
+                    addBtn.classList.add('playlist-action-btn');
+                    addBtn.textContent = "+ Inserisci in:";
+
+                    const inlineSelect = document.createElement('select');
+                    inlineSelect.classList.add('playlist-inline-select');
+
+                    for (const id in playlistsStore) {
+                        const opt = document.createElement('option');
+                        opt.value = id;
+                        opt.textContent = playlistsStore[id].name;
+                        inlineSelect.appendChild(opt);
+                    }
+
+                    addBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const selectedPlaylistId = inlineSelect.value;
+                        
+                        const giaInTarget = playlistsStore[selectedPlaylistId].videos.some(item => (item.id.videoId || item.id) === idVideo);
+                        
+                        if (!giaInTarget) {
+                            playlistsStore[selectedPlaylistId].videos.push(video);
+                            saveStore();
+                            addBtn.textContent = "✓ Salvato!";
+                            addBtn.style.backgroundColor = "#2e7d32";
+                            setTimeout(() => {
+                                addBtn.textContent = "+ Inserisci in:";
+                                addBtn.style.backgroundColor = "#222";
+                            }, 2000);
+                        } else {
+                            alert(`Questo video è già presente nella playlist "${playlistsStore[selectedPlaylistId].name}"`);
+                        }
+                    });
+
+                    actionsDiv.appendChild(addBtn);
+                    actionsDiv.appendChild(inlineSelect);
+                }
+
+                wrapper.appendChild(card);
+                wrapper.appendChild(actionsDiv);
+                videoGrid.appendChild(wrapper);
+            });
+        }
+
+        // --- REGISTRAZIONE DEL SERVICE WORKER (PWA) ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registrato con successo!', reg))
+                    .catch(err => console.error('Errore nella registrazione del Service Worker:', err));
+            });
+        }
+    </script>
+</body>
+</html>
