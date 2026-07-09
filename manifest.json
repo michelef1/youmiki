@@ -1,0 +1,18 @@
+{
+  "name": "YouMiki",
+  "short_name": "YouMiki",
+  "description": "YouMiki Playlist Manager Pro",
+  "start_url": "index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f0f0f",
+  "theme_color": "#1f1f1f",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='512' height='512'><rect width='512' height='512' rx='100' fill='%230f0f0f'/><text x='50%25' y='53%25' font-family='system-ui, sans-serif' font-weight='800' font-size='82' fill='%23ffffff' text-anchor='middle'>You<tspan fill='%23ff0055'>Miki</tspan></text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
