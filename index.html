@@ -11,7 +11,6 @@
     <style>
         /* --- DESIGN SYSTEM & VARIABILI --- */
         :root {
-            /* Sfondo principale modificato in un gradiente radiale scuro e avvolgente */
             --bg-main: radial-gradient(circle at top, #16161a 0%, #120e11 60%, #1a0812 100%);
             --bg-surface: rgba(31, 31, 35, 0.65);
             --accent: #ff0055;
@@ -49,7 +48,7 @@
             align-items: center;
             gap: 1rem;
             border-bottom: 1px solid rgba(255, 0, 85, 0.15);
-            z-index: 10;
+            z-index: 100;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         }
 
@@ -203,6 +202,96 @@
             background-color: rgba(255, 255, 255, 0.08);
         }
 
+        /* --- SEARCH FORM & AUTOCOMPLETE --- */
+        .search-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .search-form {
+            display: flex;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border-radius: 40px;
+            overflow: hidden;
+        }
+
+        .search-input {
+            flex: 1;
+            background-color: rgba(30, 30, 35, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: none;
+            padding: 0.8rem 1.2rem;
+            color: var(--text-main);
+            font-size: 1rem;
+            border-radius: 40px 0 0 40px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            background-color: rgba(40, 40, 45, 0.9);
+            border-color: rgba(255, 0, 85, 0.4);
+        }
+
+        .search-button {
+            background-color: rgba(50, 50, 55, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            padding: 0 1.5rem;
+            border-radius: 0 40px 40px 0;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .search-button:hover {
+            background-color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* TENDINA SUGGERIMENTI RICERCA */
+        .autocomplete-suggestions {
+            position: absolute;
+            top: 105%;
+            left: 0;
+            right: 0;
+            background-color: #1a1518;
+            border: 1px solid rgba(255, 0, 85, 0.25);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            z-index: 200;
+            overflow: hidden;
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .autocomplete-suggestions.show {
+            display: block;
+        }
+
+        .suggestion-item {
+            padding: 0.75rem 1.2rem;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            transition: background-color 0.15s;
+        }
+
+        .suggestion-item:hover {
+            background-color: rgba(255, 0, 85, 0.15);
+            color: #fff;
+        }
+
+        .suggestion-icon {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
         /* --- MODALI --- */
         .modal {
             display: none;
@@ -293,50 +382,6 @@
         }
         .btn-modal-cancel:hover {
             background-color: rgba(255,255,255,0.05);
-        }
-
-        /* --- SEARCH FORM --- */
-        .search-form {
-            display: flex;
-            width: 100%;
-            max-width: 600px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            border-radius: 40px;
-            overflow: hidden;
-        }
-
-        .search-input {
-            flex: 1;
-            background-color: rgba(30, 30, 35, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-right: none;
-            padding: 0.8rem 1rem;
-            color: var(--text-main);
-            font-size: 1rem;
-            border-radius: 40px 0 0 40px;
-            outline: none;
-            transition: all 0.2s;
-        }
-
-        .search-input:focus {
-            background-color: rgba(40, 40, 45, 0.9);
-            border-color: rgba(255, 0, 85, 0.4);
-        }
-
-        .search-button {
-            background-color: rgba(50, 50, 55, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--text-main);
-            padding: 0 1.5rem;
-            border-radius: 0 40px 40px 0;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.2s;
-        }
-        
-        .search-button:hover {
-            background-color: var(--accent);
-            border-color: var(--accent);
         }
 
         /* --- TITOLO SEZIONE --- */
@@ -583,10 +628,15 @@
                 </div>
             </div>
         </div>
-        <form class="search-form" id="searchForm">
-            <input type="text" class="search-input" id="searchInput" placeholder="Cerca video o musica su YouMiki..." required>
-            <button type="submit" class="search-button btn">Cerca</button>
-        </form>
+        
+        <!-- Campo di ricerca con tendina dei suggerimenti -->
+        <div class="search-container">
+            <form class="search-form" id="searchForm" autocomplete="off">
+                <input type="text" class="search-input" id="searchInput" placeholder="Cerca video o musica su YouMiki..." required>
+                <button type="submit" class="search-button btn">Cerca</button>
+            </form>
+            <div class="autocomplete-suggestions" id="suggestionsBox"></div>
+        </div>
     </header>
 
     <div class="section-header">
@@ -618,9 +668,9 @@
                 <p>Benvenuto in <strong>YouMiki</strong>! Ecco come sfruttare al meglio l'app:</p>
                 <ul>
                     <li><strong>Home & Tendenze:</strong> All'avvio vedi i brani musicali più popolari del momento in Italia. Puoi tornarci cliccando sul logo in alto.</li>
-                    <li><strong>Cerca:</strong> Usa la barra di ricerca per trovare qualsiasi traccia o video musicale.</li>
-                    <li><strong>Più Pagine de risultati:</strong> In fondo alla lista, usa i tasti "Precedente" e "Successivo" per sfogliare le pagine di risultati YouTube.</li>
-                    <li><strong>Apri Video:</strong> Clicca sulla card o sulla foto di un video per aprirlo istantaneamente in una nuova scheda su YouTube.</li>
+                    <li><strong>Cerca con Suggerimenti:</strong> Mentre digiti nel campo di ricerca vedrai comparire i risultati e le ricerche più probabili in tempo reale.</li>
+                    <li><strong>Più Pagine di risultati:</strong> In fondo alla lista, usa i tasti "Precedente" e "Successivo" per sfogliare le pagine di risultati.</li>
+                    <li><strong>Apri Video:</strong> Clicca sulla card o sulla foto di un video per aprirlo istantaneamente su YouTube.</li>
                     <li><strong>Crea Playlist:</strong> Clicca sul tasto <em>"+ Nuova"</em> in alto per generare una nuova lista personalizzata.</li>
                 </ul>
             </div>
@@ -633,7 +683,7 @@
         <div class="modal-content">
             <h3 class="modal-title">Informazioni Applicazione</h3>
             <div class="modal-body" style="text-align: center; padding: 1rem 0;">
-                <p style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">YouMiki v2.5</p>
+                <p style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">YouMiki v2.6</p>
                 <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Interfaccia leggera e personalizzata per lo streaming organizzato.</p>
                 <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; font-style: italic;">
                     Creata da Miki By Gemini
@@ -677,6 +727,7 @@
         
         const searchForm = document.getElementById('searchForm');
         const searchInput = document.getElementById('searchInput');
+        const suggestionsBox = document.getElementById('suggestionsBox');
         const videoGrid = document.getElementById('videoGrid');
         const logoHome = document.getElementById('logoHome');
         const pageTitle = document.getElementById('pageTitle');
@@ -706,14 +757,13 @@
         const installDivider = document.getElementById('installDivider');
         let deferredPrompt;
 
-        // Elementi Nuova Modale di Input
+        // Elementi Modali
         const inputModal = document.getElementById('inputModal');
         const inputModalLabel = document.getElementById('inputModalLabel');
         const modalInputField = document.getElementById('modalInputField');
         const inputCancelBtn = document.getElementById('inputCancelBtn');
         const inputSaveBtn = document.getElementById('inputSaveBtn');
 
-        // Elementi Modale di Conferma
         const confirmModal = document.getElementById('confirmModal');
         const confirmModalMessage = document.getElementById('confirmModalMessage');
         const confirmCancelBtn = document.getElementById('confirmCancelBtn');
@@ -726,7 +776,8 @@
         let prevToken = "";
         let onConfirmAction = null; 
         let onInputSaveAction = null; 
-        
+        let debounceTimer;
+
         let playlistsStore = JSON.parse(localStorage.getItem('youmiki_playlists_store')) || {
             "playlist_default": {
                 name: "Preferiti ❤️",
@@ -756,7 +807,64 @@
             installDivider.style.display = 'none';
         });
 
-        // --- SISTEMA DI POP-UP PERSONALIZZATI ---
+        // --- SISTEMA AUTOCOMPLETE SUGGERIMENTI ---
+        window.handleSuggestResponse = function(data) {
+            const suggestions = data[1] || [];
+            if (suggestions.length === 0 || document.activeElement !== searchInput) {
+                suggestionsBox.classList.remove('show');
+                return;
+            }
+
+            suggestionsBox.innerHTML = '';
+            suggestions.slice(0, 6).forEach(item => {
+                const term = item[0];
+                const div = document.createElement('div');
+                div.className = 'suggestion-item';
+                div.innerHTML = `<span class="suggestion-icon">🔍</span> <span>${term}</span>`;
+                
+                div.addEventListener('click', () => {
+                    searchInput.value = term;
+                    suggestionsBox.classList.remove('show');
+                    executeSearch(term);
+                });
+                
+                suggestionsBox.appendChild(div);
+            });
+
+            suggestionsBox.classList.add('show');
+        };
+
+        function fetchSuggestions(query) {
+            if (!query.trim()) {
+                suggestionsBox.classList.remove('show');
+                return;
+            }
+            // Rimuove eventuali vecchi script di JSONP
+            const oldScript = document.getElementById('jsonp-suggest');
+            if (oldScript) oldScript.remove();
+
+            const script = document.createElement('script');
+            script.id = 'jsonp-suggest';
+            script.src = `https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=${encodeURIComponent(query)}&hl=it&jsonp=handleSuggestResponse`;
+            document.body.appendChild(script);
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            const query = e.target.value;
+            debounceTimer = setTimeout(() => {
+                fetchSuggestions(query);
+            }, 250);
+        });
+
+        // Chiude la tendina dei suggerimenti quando si clicca fuori
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+                suggestionsBox.classList.remove('show');
+            }
+        });
+
+        // --- POP-UP PERSONALIZZATI ---
         function showYouMikiConfirm(message, callbackAction) {
             confirmModalMessage.textContent = message;
             onConfirmAction = callbackAction;
@@ -821,6 +929,7 @@
 
         logoHome.addEventListener('click', () => {
             searchInput.value = '';
+            suggestionsBox.classList.remove('show');
             playlistSelect.value = "trends";
             loadTrendingMusic();
         });
@@ -828,6 +937,7 @@
         playlistSelect.addEventListener('change', (e) => {
             const val = e.target.value;
             searchInput.value = '';
+            suggestionsBox.classList.remove('show');
             if (val === "trends") loadTrendingMusic();
             else openPlaylist(val);
         });
@@ -865,17 +975,21 @@
             });
         });
 
-        searchForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const query = searchInput.value.trim();
-            if (!query) return;
-
+        function executeSearch(query) {
             currentView = "search";
             currentQuery = query;
             playlistSelect.value = "trends";
             playlistManagementControls.style.display = "none";
             pageTitle.textContent = `Risultati per: "${query}"`;
             loadSearchResults(""); 
+        }
+
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            suggestionsBox.classList.remove('show');
+            const query = searchInput.value.trim();
+            if (!query) return;
+            executeSearch(query);
         });
 
         nextPageBtn.addEventListener('click', () => {
