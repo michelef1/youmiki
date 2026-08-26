@@ -1,4 +1,4 @@
-const CACHE_NAME = 'youmiki-cache-v2.5';
+const CACHE_NAME = 'youmiki-cache-v3';
 const ASSETS = [
   'index.html',
   'manifest.json'
