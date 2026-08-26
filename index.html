@@ -834,6 +834,11 @@
                         </button>
                         <div class="dropdown-divider" id="installDivider" style="display: none;"></div>
                         
+                        <!-- Opzioni Importa ed Esporta aggiunte -->
+                        <button class="dropdown-item" id="exportDataBtn">📤 Esporta Playlist</button>
+                        <button class="dropdown-item" id="importDataBtn">📥 Importa Playlist</button>
+                        <div class="dropdown-divider"></div>
+
                         <button class="dropdown-item" id="openGuideBtn">📖 Guida Applicazione</button>
                         <div class="dropdown-divider"></div>
                         <button class="dropdown-item" id="openInfoBtn">ℹ️ Info App</button>
@@ -851,6 +856,9 @@
             <div class="autocomplete-suggestions" id="suggestionsBox"></div>
         </div>
     </header>
+
+    <!-- Input file nascosto per l'importazione -->
+    <input type="file" id="importFileInput" accept=".json" style="display: none;">
 
     <div class="section-header">
         <h2 class="section-title" id="pageTitle">Musica di Tendenza</h2>
@@ -913,6 +921,14 @@
                 </div>
 
                 <div class="guide-card">
+                    <span class="guide-icon">💾</span>
+                    <div class="guide-text">
+                        <strong>Backup & Ripristino</strong>
+                        <p>Usa "Esporta" o "Importa" dal menu (⋮) per salvaguardare i tuoi dati.</p>
+                    </div>
+                </div>
+
+                <div class="guide-card">
                     <span class="guide-icon">📄</span>
                     <div class="guide-text">
                         <strong>Navigazione Pagine</strong>
@@ -930,7 +946,7 @@
         <div class="modal-content">
             <h3 class="modal-title">Informazioni Applicazione</h3>
             <div class="modal-body" style="text-align: center; padding: 1rem 0;">
-                <p style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">YouMiki v2.7</p>
+                <p style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">YouMiki v2.8</p>
                 <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Interfaccia leggera e personalizzata per lo streaming organizzato.</p>
                 <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; font-style: italic;">
                     Creata da Miki By Gemini
@@ -960,11 +976,11 @@
         <div class="modal-content">
             <h3 class="modal-title">YouMiki</h3>
             <div class="modal-body">
-                <p id="confirmModalMessage">Sei sicuro di voler procedere con l'eliminazione?</p>
+                <p id="confirmModalMessage">Sei sicuro di voler procedere?</p>
             </div>
             <div style="margin-top: 1.5rem; text-align: right;">
                 <button class="btn btn-modal-cancel" id="confirmCancelBtn">Annulla</button>
-                <button class="btn btn-accent" id="confirmExecuteBtn" style="padding: 0.5rem 1.2rem; border-radius: 20px;">Elimina</button>
+                <button class="btn btn-accent" id="confirmExecuteBtn" style="padding: 0.5rem 1.2rem; border-radius: 20px;">Conferma</button>
             </div>
         </div>
     </div>
@@ -982,6 +998,11 @@
         const renamePlaylistBtn = document.getElementById('renamePlaylistBtn');
         const deletePlaylistBtn = document.getElementById('deletePlaylistBtn');
         const playlistManagementControls = document.getElementById('playlistManagementControls');
+
+        // Import / Export Controls
+        const exportDataBtn = document.getElementById('exportDataBtn');
+        const importDataBtn = document.getElementById('importDataBtn');
+        const importFileInput = document.getElementById('importFileInput');
 
         // Controlli Custom Select Header
         const customSelectWrapper = document.getElementById('customSelectWrapper');
@@ -1035,6 +1056,47 @@
                 videos: []
             }
         };
+
+        // --- GESTIONE IMPORT / EXPORT PLAYLIST ---
+        exportDataBtn.addEventListener('click', () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(playlistsStore, null, 2));
+            const downloadAnchor = document.createElement('a');
+            const dateStr = new Date().toISOString().slice(0, 10);
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `youmiki_playlists_${dateStr}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        });
+
+        importDataBtn.addEventListener('click', () => {
+            importFileInput.click();
+        });
+
+        importFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const importedStore = JSON.parse(event.target.result);
+                    if (typeof importedStore === 'object' && importedStore !== null) {
+                        showYouMikiConfirm("Importando questo file sovrascriverai le tue playlist attuali. Desideri continuare?", () => {
+                            playlistsStore = importedStore;
+                            saveStore();
+                            loadTrendingMusic();
+                        });
+                    } else {
+                        alert("File non valido: formato JSON errato.");
+                    }
+                } catch (err) {
+                    alert("Errore durante la lettura del file caricato.");
+                }
+            };
+            reader.readAsText(file);
+            importFileInput.value = ''; // Reset input
+        });
 
         // --- GESTIONE INTERCETTAZIONE INSTALLAZIONE PWA ---
         window.addEventListener('beforeinstallprompt', (e) => {
